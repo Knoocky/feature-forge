@@ -1,10 +1,64 @@
 # feature-forge
 
-A full-cycle feature development governance framework for Claude Code.
+A full-cycle feature development governance framework for AI coding agents.
+
+## Installation
+
+### Claude Code (full support — skills + agents + hooks)
+
+1. Add the marketplace:
+
+```
+/plugin marketplace add olegbaranok --source github:olegbaranok/feature-forge
+```
+
+2. Install the plugin:
+
+```
+/plugin install feature-forge@olegbaranok
+```
+
+All 10 skills, 6 agents, and 3 hooks activate automatically.
+
+### GitHub Copilot
+Copy skills into a directory Copilot discovers:
+
+```bash
+cp -r skills .github/skills
+# or
+cp -r skills .agents/skills
+```
+
+### Cursor (skills only, format conversion)
+
+```bash
+for skill in skills/*/SKILL.md; do
+  name=$(basename $(dirname "$skill"))
+  cp "$skill" ".cursor/rules/${name}.mdc"
+done
+```
+
+### Windsurf (manual, skills only)
+
+Concatenate the skills you need into a single file:
+
+```bash
+cat skills/feature-workflow/SKILL.md skills/debug-hypothesis/SKILL.md > .windsurfrules
+```
+
+### Gemini CLI (skills only)
+
+```bash
+cp -r skills .agents/skills
+```
+
+> **Note:** Hooks (edit-intent gating, subagent write guard) and sub-agents with isolated context are Claude Code-specific. Other platforms get the skills (workflow instructions) but not the enforcement layer.
+
+---
 
 ## What is this?
 
-feature-forge is a Claude Code plugin that adds a structured, multi-phase feature development pipeline to any project. It orchestrates research, task decomposition, implementation, testing, code review (via 3 parallel sub-agents), and documentation updates — with automatic loopback on bugs or critical review findings.
+feature-forge adds a structured, multi-phase feature development pipeline to any project. It orchestrates research, task decomposition, implementation, testing, code review (via 3 parallel sub-agents), and documentation updates — with automatic loopback on bugs or critical review findings.
 
 ## Key features
 
@@ -16,25 +70,16 @@ feature-forge is a Claude Code plugin that adds a structured, multi-phase featur
 - **Dual-mode agents** — test-writer and design-keeper can both consult past knowledge and memorize new findings
 - **Artifact storage** — all intermediate files organized under `.tmp/<task-slug>/` (gitignored, regenerable)
 
-## Quick start
+## Setup for your project
 
-1. Install the plugin (add to `~/.claude/settings.json`):
+After installing the plugin:
 
-```json
-{
-  "enabledPlugins": {
-    "feature-forge@your-marketplace": true
-  }
-}
-```
+1. Copy `templates/CLAUDE.md.template` to your project root as `CLAUDE.md` and fill in the `{{placeholders}}`
+2. Create `.claude/PROJECT.md` with your project's conventions (code style, architecture, tools)
+3. Add `.tmp/` to your `.gitignore`
+4. Start using it — describe a feature, and feature-forge orchestrates the pipeline
 
-2. Copy `templates/CLAUDE.md.template` to your project root as `CLAUDE.md` and fill in the `{{placeholders}}`
-
-3. Create a `PROJECT.md` in your `.claude/` directory with your project's conventions (code style, architecture, tools)
-
-4. Add `.tmp/` to your `.gitignore`
-
-5. Start using it — just describe a feature to implement, and feature-forge will orchestrate the pipeline
+See `templates/setup-checklist.md` for a detailed walkthrough.
 
 ## What's inside
 
@@ -53,7 +98,7 @@ feature-forge is a Claude Code plugin that adds a structured, multi-phase featur
 | `test-on-sandbox` | Isolated component verification |
 | `verify-text-encoding` | Detect UTF-8 corruption after edits |
 
-### Agents (6)
+### Agents (6) — Claude Code only
 
 | Agent | Description |
 |-------|-------------|
@@ -64,7 +109,7 @@ feature-forge is a Claude Code plugin that adds a structured, multi-phase featur
 | `test-writer` | Dual-mode: generates test cases / memorizes edge cases |
 | `design-keeper` | Dual-mode: consults design rules / memorizes new ones |
 
-### Hooks (3)
+### Hooks (3) — Claude Code only
 
 | Hook | Event | Purpose |
 |------|-------|---------|
