@@ -1,0 +1,21 @@
+{
+  "name": "feature-forge",
+  "description": "A full-cycle feature development governance framework for Claude Code — orchestrated pipeline with sub-agent reviews, scientific debugging, persistent agent memory, and edit-intent gating.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Oleg Baranok",
+    "email": "oleg.baranok@gmail.com"
+  },
+  "homepage": "https://github.com/olegbaranok/feature-forge",
+  "repository": "https://github.com/olegbaranok/feature-forge",
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "feature-workflow",
+    "code-review",
+    "debugging",
+    "agents",
+    "orchestration",
+    "governance"
+  ]
+}

@@ -1,0 +1,206 @@
+# Agent Instructions
+
+> Copy this file to your project root as `CLAUDE.md` and fill in the `{{placeholders}}`.
+
+## Project Context
+
+**Project:** {{PROJECT_NAME}}
+**Owner:** {{OWNER_NAME}}
+
+**Stack:**
+
+{{STACK_DESCRIPTION — list your framework, language, build tools, etc.}}
+
+### Boundaries
+
+{{LIST_YOUR_PROJECT_BOUNDARIES — what Claude should NOT do in this project}}
+
+- Temporary artifacts live under `.tmp/<task-slug>/<category>/` — never in the project root. See **Artifact Storage** below.
+
+### Artifact Storage
+
+Everything Claude produces that is **not** project source code (plans, test specs, screenshots, research dumps, intermediate notes) goes under `.tmp/` with a two-level structure:
+
+```
+.tmp/
+└── <task-slug>/
+    ├── plans/
+    ├── test-specs/
+    ├── screenshots/
+    ├── research/
+    ├── reviews/
+    └── notes/
+```
+
+**`<task-slug>` naming:**
+
+- If a ticket is known: `PROJ-XXXXX-<word1>-<word2>-<word3>` — kebab-case, **max 3 words** from the task's meaning.
+- If no ticket: just `<word1>-<word2>-<word3>`.
+- Extract the ticket from the current branch via `git rev-parse --abbrev-ref HEAD | grep -oE '[A-Z]+-[0-9]+'` when possible.
+
+**Category folders** (create only the ones a given task needs):
+
+| Folder          | What goes there                                                |
+| --------------- | -------------------------------------------------------------- |
+| `plans/`        | Implementation plans, architecture proposals                   |
+| `test-specs/`   | Test specifications (`human.md`, `ai.md`)                      |
+| `screenshots/`  | Browser screenshots, design references                         |
+| `research/`     | Code maps, dependency audits, exploratory findings             |
+| `reviews/`      | Code review reports, diff analyses                             |
+| `notes/`        | Freeform scratch notes                                         |
+
+The whole `.tmp/` tree is gitignored — never commit anything under it.
+
+---
+
+## Architecture
+
+| File                  | Loaded by                                          |
+| --------------------- | -------------------------------------------------- |
+| `CLAUDE.md`           | Claude Code CLI (auto-loaded as project context)   |
+| `.claude/PROJECT.md`  | Deep technical reference, **read on demand**       |
+
+Inside `.claude/` there are two folders:
+
+**Skills** (`.claude/skills/<name>/`) — SOPs, loaded on demand.
+**Agents** (`.claude/agents/`) — sub-agents, spawned on demand.
+
+---
+
+## Source Code Map
+
+{{DESCRIBE_YOUR_SOURCE_TREE — one-liner per layer/directory}}
+
+| Layer            | Purpose                                                       |
+| ---------------- | ------------------------------------------------------------- |
+| `src/`           | {{Description}}                                               |
+
+---
+
+## How to Create New Skills
+
+When the user asks to create a new workflow/process/skill:
+
+### 1. Create the skill folder and SKILL.md:
+
+```
+.claude/skills/<skill-name>/SKILL.md
+```
+
+### 2. Use this template:
+
+```markdown
+---
+name: [Skill Name]
+description: [One sentence — what does this skill do]
+allowed-tools: [Read, Write, Bash, Grep, ...]
+---
+
+# [Skill Name]
+
+## Goal
+[What is the end result?]
+
+## Input
+[What does the user provide?]
+
+## Steps
+1. [First step]
+2. [Second step]
+3. Save result to `.tmp/<task-slug>/<category>/[filename].md`
+
+## Output Format
+[Exact format of the deliverable]
+
+## Learnings
+- (Updated automatically after each run)
+```
+
+---
+
+## How to Create Sub-Agents
+
+### 1. Create the agent file:
+
+```
+.claude/agents/<agent-name>.md
+```
+
+### 2. Use this template:
+
+```markdown
+---
+model: sonnet
+allowed-tools: [Read, Glob, Grep]
+---
+
+# [Agent Name]
+
+## Role
+[One sentence — what does this agent do]
+
+## Instructions
+[What should this agent focus on?]
+
+## Output Format
+[Exact format of the report/response]
+```
+
+### When to use sub-agents vs skills:
+
+- **Skill** = instructions the parent agent executes itself (like a checklist)
+- **Sub-agent** = a separate agent instance with its own context (like delegating to a colleague)
+
+---
+
+## Available Skills (from feature-forge plugin)
+
+| Skill                  | Description                                                                                |
+| ---------------------- | ------------------------------------------------------------------------------------------ |
+| `feature-workflow`     | Orchestrator: Research → Decompose → Implement → Test → Review → Docs, with loopback      |
+| `decompose-task`       | Break feature into atomic subtasks with user approval gate                                 |
+| `implement-feature`    | Write code following project conventions, with design-keeper consultation                  |
+| `test-feature`         | Run type checker + linter + browser verification, report bugs                              |
+| `debug-hypothesis`     | Scientific debugging: Observe → Hypothesize → Experiment → Conclude                       |
+| `remember-edge-case`   | Save a bug to test-writer's persistent memory for future regression coverage               |
+| `remember-design-rule` | Save a UX rule to design-keeper's persistent memory                                        |
+| `update-docs`          | Sync PROJECT.md and ARCHITECTURE.md after a feature ships                                  |
+| `test-on-sandbox`      | Isolated component verification in browser                                                 |
+| `verify-text-encoding` | Detect UTF-8 corruption (U+FFFD, mojibake) after edits                                    |
+
+## Available Agents (from feature-forge plugin)
+
+| Agent                    | Description                                                     |
+| ------------------------ | --------------------------------------------------------------- |
+| `codebase-researcher`    | Read-only explorer: maps relevant files, reusable primitives    |
+| `code-quality-reviewer`  | Reviews DRY/SOLID, naming, readability, architecture compliance |
+| `performance-reviewer`   | Reviews rendering, caching, bundle size, data fetching          |
+| `security-reviewer`      | Reviews XSS, auth, data exposure, dependencies                  |
+| `test-writer`            | Dual-mode: generates test cases / memorizes edge cases          |
+| `design-keeper`          | Dual-mode: consults design rules / memorizes new ones           |
+
+---
+
+## Self-Annealing Loop
+
+Errors are learning opportunities. When something breaks:
+
+1. **Fix** the script or approach
+2. **Test** it
+3. **Update SKILL.md** — add what you learned to the Learnings section
+4. **System is now stronger** — the same error won't happen again
+
+When you encounter a recurring mistake (2-3 times):
+- Propose adding a rule to the instruction files
+- Always ask the user before modifying instruction files
+
+---
+
+## Operating Principles
+
+1. **Check before building.** Before writing a new skill or script, check `.claude/skills/`.
+2. **Plan before building.** For non-trivial tasks: plan first, then implement.
+3. **One skill = one task.** Keep skills short and focused. 50-100 lines max.
+4. **Skills auto-activate.** Claude picks the right skill based on your request.
+5. **Scrap & redo after 2-3 failed attempts.** Stop patching — revert, implement clean.
+6. **Local files are processing-only.** Intermediate artifacts go to `.tmp/` and are never committed.
