@@ -9,13 +9,13 @@ A full-cycle feature development governance framework for AI coding agents.
 1. Add the marketplace:
 
 ```
-/plugin marketplace add olegbaranok --source github:olegbaranok/feature-forge
+/plugin marketplace add Knoocky --source github:Knoocky/feature-forge
 ```
 
 2. Install the plugin:
 
 ```
-/plugin install feature-forge@olegbaranok
+/plugin install feature-forge@Knoocky
 ```
 
 All 10 skills, 6 agents, and 3 hooks activate automatically.
