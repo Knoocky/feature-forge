@@ -6,19 +6,19 @@ A full-cycle feature development governance framework for AI coding agents.
 
 ### Claude Code (full support — skills + agents + hooks)
 
-1. Add the marketplace:
+1. Add the marketplace (GitHub shorthand — `owner/repo`):
 
 ```
-/plugin marketplace add Knoocky --source github:Knoocky/feature-forge
+/plugin marketplace add Knoocky/feature-forge
 ```
 
 2. Install the plugin:
 
 ```
-/plugin install feature-forge@Knoocky
+/plugin install feature-forge@knoocky
 ```
 
-All 10 skills, 6 agents, and 3 hooks activate automatically.
+All 10 skills, 6 agents, and 4 hooks activate automatically. On first run in a project, the `session-init` hook seeds a `CLAUDE.md` from the bundled template if the project doesn't already have one — existing `CLAUDE.md` files are left untouched.
 
 ### GitHub Copilot CLI (skills only)
 
@@ -172,13 +172,13 @@ All state lives on disk in `.tmp/<task-slug>/notes/state.yml`, not in chat histo
 
 ## Setup for your project
 
-After installing the plugin:
+After installing the plugin, the `session-init` hook runs on the next session and generates `<project>/.claude/CLAUDE.md` with the full list of skills and agents — you don't edit that file, it's refreshed automatically.
 
-1. Copy `templates/CLAUDE.md.template` to your project root as `CLAUDE.md` and fill in the `{{placeholders}}`
+The only manual steps are the project-specific context files:
+
+1. Create `CLAUDE.md` in your project root (use `templates/CLAUDE.md.template` as a starting point) and fill in the `{{placeholders}}`: project name, stack, boundaries, source map
 2. Create `.claude/PROJECT.md` with your project's conventions (code style, architecture, type checker/linter commands)
 3. Add `.tmp/` to your `.gitignore`
-
-See `templates/setup-checklist.md` for a detailed walkthrough.
 
 ---
 
@@ -210,13 +210,14 @@ See `templates/setup-checklist.md` for a detailed walkthrough.
 | `test-writer`           | **Dual** (generate / memorize) | Yes    | Generates test cases with automatic regression coverage |
 | `design-keeper`         | **Dual** (consult / memorize)  | Yes    | Applies past design rules preventatively                |
 
-### Hooks (3) — Claude Code only
+### Hooks (4) — Claude Code only
 
-| Hook                   | Event            | What it does                                                 |
-| ---------------------- | ---------------- | ------------------------------------------------------------ |
-| `prompt-router`        | UserPromptSubmit | Classifies intent, steers toward workflow, writes gate state |
-| `workflow-gate`        | PreToolUse       | **Hard blocks** Edit/Write until workflow skill is invoked   |
-| `subagent-write-guard` | PreToolUse       | Ensures sub-agents only write to their own allowlisted paths |
+| Hook                   | Event            | What it does                                                                 |
+| ---------------------- | ---------------- | ---------------------------------------------------------------------------- |
+| `prompt-router`        | UserPromptSubmit | Classifies intent, steers toward workflow, writes gate state                 |
+| `workflow-gate`        | PreToolUse       | **Hard blocks** Edit/Write until workflow skill is invoked                   |
+| `subagent-write-guard` | PreToolUse       | Ensures sub-agents only write to their own allowlisted paths                 |
+| `session-init`         | SessionStart     | Regenerates `.claude/CLAUDE.md` with the list of installed skills and agents |
 
 ---
 
